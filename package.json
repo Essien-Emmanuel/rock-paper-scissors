@@ -13,5 +13,10 @@
   "dependencies": {
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "ts-alias": "^0.0.7",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   }
 }
