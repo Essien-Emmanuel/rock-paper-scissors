@@ -1,4 +1,5 @@
 import { exitProgram, print } from "../core/io";
+import { readTheFile } from "../core/utils";
 import {
   gameObjectsKeyMap,
   gamePlayResult,
@@ -6,20 +7,22 @@ import {
   renderResult,
   rockPaperScissors,
 } from "./logic";
-import { State } from "./state";
+import { GameState } from "./state";
 
-export function render() {
+export async function render() {
+  const State = await readTheFile("state");
   print(State.result + "\n");
 }
 
-export function update(config: { input: string; playerId: number }) {
+export async function update(config: { input: string; playerId: number }) {
   const { input, playerId } = config;
   if (input === "\u0003") {
     exitProgram;
   }
 
+  const State: GameState = await readTheFile("state");
+
   // run game
-  console.log("player ", playerId, State.players, State.players[playerId - 1]);
   State.players[playerId - 1].choice = input;
 
   if (!State.allPlayed) {
@@ -50,7 +53,7 @@ export function update(config: { input: string; playerId: number }) {
 
   const result = gamePlayResult(player1Choice, player2Choice);
 
-  State.result = renderResult(playerId, player1Choice, result);
+  State.result = await renderResult(playerId, player1Choice, result);
 
   rockPaperScissors(playerId);
   render();

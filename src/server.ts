@@ -1,12 +1,19 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import { State } from "./game/state";
+import { readTheFile, writeToFile } from "./core/utils";
+import { State as initGameState } from "./game/state";
 
 const httpServer = createServer();
 const io = new Server(httpServer);
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   console.log(socket.id + " connected");
+  let State = await readTheFile("state");
+  if (!State) {
+    await writeToFile("state", initGameState);
+    State = initGameState;
+  }
+
   if (socket.id) {
     const playerId = State.players.length + 1;
     State.players.push({
@@ -19,9 +26,10 @@ io.on("connection", (socket) => {
       losses: 0,
       draws: 0,
     });
+
+    await writeToFile("state", State);
   }
 
-  console.log(State);
   const playersCount = State.players.length;
   if (playersCount < 2) {
     console.log("Waiting for the second player.");

@@ -1,5 +1,5 @@
-import { handleInput } from "../core/io";
-import { State } from "./state";
+import { readTheFile, writeToFile } from "../core/utils";
+import { GameState } from "./state";
 
 export const gameObjects = ["rock", "paper", "scissors"] as const;
 
@@ -73,11 +73,12 @@ export function gamePlayResult(
   return { result: 0, player2Choice: "", player2Action: "" };
 }
 
-export function renderResult(
+export async function renderResult(
   playerId: number,
   player1Choice: PlayerChoice,
   result: GamePlayResult
 ) {
+  const State: GameState = await readTheFile("state");
   switch (result.result) {
     case 1:
       State.players.forEach((player) => {
@@ -85,6 +86,7 @@ export function renderResult(
           player.wins++;
         }
       });
+      await writeToFile("state", State);
       return "You Win";
     case -1:
       State.players.forEach((player) => {
@@ -92,6 +94,8 @@ export function renderResult(
           player.losses++;
         }
       });
+      await writeToFile("state", State);
+
       return `${
         gameChoiceEmojiMap[result.player2Choice as GameChoiceEmojiKey]
       } ${result.player2Action} ${
@@ -103,6 +107,8 @@ export function renderResult(
           player.draws++;
         }
       });
+      await writeToFile("state", State);
+
       return "Draw";
   }
 }
