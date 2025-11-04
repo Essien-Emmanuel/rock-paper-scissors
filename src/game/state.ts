@@ -11,12 +11,12 @@ export type PlayerConfig = {
 
 export type GameState = {
   players: PlayerConfig[];
-  allPlayed: boolean;
+  allPlayed: number;
   result: string;
 };
 
 export const State: GameState = {
   players: [],
-  allPlayed: false,
+  allPlayed: 0,
   result: "",
 };

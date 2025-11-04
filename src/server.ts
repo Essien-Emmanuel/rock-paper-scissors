@@ -1,14 +1,15 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { readTheFile, writeToFile } from "./core/utils";
-import { State as initGameState } from "./game/state";
+import { GameState, State as initGameState } from "./game/state";
 
 const httpServer = createServer();
-const io = new Server(httpServer);
+export const io = new Server(httpServer);
 
 io.on("connection", async (socket) => {
   console.log(socket.id + " connected");
-  let State = await readTheFile("state");
+
+  let State: GameState = await readTheFile("state");
   if (!State) {
     await writeToFile("state", initGameState);
     State = initGameState;
@@ -36,16 +37,7 @@ io.on("connection", async (socket) => {
     return;
   }
 
-  const playerTurnId = Math.random() > 0.5 ? 1 : 2;
-
-  io.emit("game:start", {
-    players: State.players,
-    playerTurnId,
-  });
-
-  io.on("turn", (args: string) => {
-    io.emit("turn", args);
-  });
+  io.emit("playing:first", State);
 
   // disconnect
   socket.on("disconnect", () => {

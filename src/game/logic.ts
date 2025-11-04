@@ -37,6 +37,7 @@ export function gamePlayResult(
   player1Choice: PlayerChoice,
   player2Choice: PlayerChoice
 ): GamePlayResult {
+  console.log("in game play result");
   if (player1Choice === player2Choice) {
     return { result: 0, player2Choice, player2Action: "" };
   }
@@ -73,7 +74,7 @@ export function gamePlayResult(
   return { result: 0, player2Choice: "", player2Action: "" };
 }
 
-export async function renderResult(
+export async function updateGameResult(
   playerId: number,
   player1Choice: PlayerChoice,
   result: GamePlayResult
