@@ -7,11 +7,31 @@ import {
   PlayerChoice,
   updateGameResult,
 } from "./logic";
-import { GameState } from "./state";
+import { GameState, PlayerConfig } from "./state";
 
-export async function render() {
-  const State = await readTheFile("state");
-  print(State.result + "\n");
+export async function render(playerId: number) {
+  const State: GameState = await readTheFile("state");
+
+  let you: PlayerConfig | { [key: string]: any } = {};
+  let opponent: PlayerConfig | { [key: string]: any } = {};
+
+  for (let player of State.players) {
+    if (player.id === playerId) {
+      you = player;
+    } else {
+      opponent = player;
+    }
+  }
+  if (!you) {
+    console.log("No players connected.");
+    return;
+  }
+
+  // console.log(JSON.stringify(State.players, null, 2));
+
+  const stat = `You ${you?.status} \nOpponent ${opponent.status}`;
+
+  print(stat + "\n");
 }
 
 export async function update(config: { input: string; playerId: number }) {
@@ -29,23 +49,18 @@ export async function update(config: { input: string; playerId: number }) {
 
   // run game
   const played = State.players.find((player) => player.choice);
+
   let isPlayerTurn = State.players[playerId - 1].turn;
+
   if (played && !isPlayerTurn) {
     console.log("Wait for opponent to play next.");
     // io.emit("playing:next", State);
     return;
   }
+
   State.players[playerId - 1].choice = input;
 
   State.players.map((player) => {
-    if (player.choice) {
-      console.log("player choice ", player.choice);
-      if (State.allPlayed === 2) {
-        State.allPlayed = 0;
-      }
-      State.allPlayed++;
-    }
-
     if (player.id !== playerId) {
       player.turn = true;
     } else {
@@ -53,9 +68,19 @@ export async function update(config: { input: string; playerId: number }) {
     }
   });
 
+  if (State.allPlayed === 2) {
+    State.allPlayed = 0;
+  }
+  State.allPlayed++;
+
   await writeToFile("state", State);
 
-  console.log(JSON.stringify(State, null, 2));
+  // console.log(JSON.stringify(State, null, 2));
+
+  // show input
+  const choice = gameObjectsKeyMap[input as keyof typeof gameObjectsKeyMap];
+
+  console.log("YOU: ", choice);
 
   isPlayerTurn = State.players[playerId - 1].turn;
 
@@ -74,18 +99,10 @@ export async function update(config: { input: string; playerId: number }) {
     return playerChoice;
   });
 
-  console.log({ isPlayerTurn });
-
-  // check player turn
-  if (!isPlayerTurn) {
-    console.log("Wait for opponent to choose.");
-    return;
-  }
-
   const result = gamePlayResult(player1Choice, player2Choice);
 
-  State.result = await updateGameResult(playerId, player1Choice, result);
+  await updateGameResult(playerId, player1Choice, result);
 
-  render();
+  render(playerId);
   return;
 }

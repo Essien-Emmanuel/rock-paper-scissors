@@ -1,3 +1,7 @@
+import { GameChoiceAction } from "./logic";
+
+export type ResultStatus = "win" | "loss" | "draw";
+
 export type PlayerConfig = {
   id: number;
   choice: string | null;
@@ -7,16 +11,18 @@ export type PlayerConfig = {
   wins: number;
   losses: number;
   draws: number;
+  status: ResultStatus | null;
+  action: GameChoiceAction | null;
 };
 
 export type GameState = {
   players: PlayerConfig[];
   allPlayed: number;
-  result: string;
+  result: { status: ResultStatus; playerId: number }[];
 };
 
 export const State: GameState = {
   players: [],
   allPlayed: 0,
-  result: "",
+  result: [],
 };

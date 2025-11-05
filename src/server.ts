@@ -26,7 +26,10 @@ io.on("connection", async (socket) => {
       wins: 0,
       losses: 0,
       draws: 0,
+      status: null,
+      action: null,
     });
+    State.result = [];
 
     await writeToFile("state", State);
   }

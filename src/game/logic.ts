@@ -21,6 +21,7 @@ export type GameChoiceAction = "crushes" | "cuts" | "covers" | (string & {});
 
 export type GamePlayResult = {
   result: number;
+  player1Action: GameChoiceAction;
   player2Choice: PlayerChoice;
   player2Action: GameChoiceAction;
 };
@@ -37,41 +38,70 @@ export function gamePlayResult(
   player1Choice: PlayerChoice,
   player2Choice: PlayerChoice
 ): GamePlayResult {
-  console.log("in game play result");
   if (player1Choice === player2Choice) {
-    return { result: 0, player2Choice, player2Action: "" };
+    return { result: 0, player1Action: "", player2Choice, player2Action: "" };
   }
 
   if (player1Choice === "rock") {
     switch (player2Choice) {
       case "paper":
-        return { result: -1, player2Choice, player2Action: "covers" };
+        return {
+          result: -1,
+          player1Action: "",
+          player2Choice,
+          player2Action: "covers",
+        };
       default:
         // we handled same choice at the top. default will be scissors
-        return { result: 1, player2Choice, player2Action: "" };
+        return {
+          result: 1,
+          player1Action: "crushes",
+          player2Choice,
+          player2Action: "",
+        };
     }
   }
   if (player1Choice === "paper") {
     switch (player2Choice) {
       case "rock":
-        return { result: 1, player2Choice, player2Action: "" };
+        return {
+          result: 1,
+          player1Action: "covers",
+          player2Choice,
+          player2Action: "",
+        };
       default:
         // we handled same choice at the top. default will be scissors
-        return { result: -1, player2Choice, player2Action: "cuts" };
+        return {
+          result: -1,
+          player1Action: "",
+          player2Choice,
+          player2Action: "cuts",
+        };
     }
   }
 
   if (player1Choice === "scissors") {
     switch (player2Choice) {
       case "paper":
-        return { result: 1, player2Choice, player2Action: "" };
+        return {
+          result: 1,
+          player1Action: "cuts",
+          player2Choice,
+          player2Action: "",
+        };
       default:
         // we handled same choice at the top. default will be rock
-        return { result: -1, player2Choice, player2Action: "crushes" };
+        return {
+          result: -1,
+          player1Action: "",
+          player2Choice,
+          player2Action: "crushes",
+        };
     }
   }
 
-  return { result: 0, player2Choice: "", player2Action: "" };
+  return { result: 0, player1Action: "", player2Choice: "", player2Action: "" };
 }
 
 export async function updateGameResult(
@@ -80,33 +110,53 @@ export async function updateGameResult(
   result: GamePlayResult
 ) {
   const State: GameState = await readTheFile("state");
+
   switch (result.result) {
     case 1:
       State.players.forEach((player) => {
-        if (player.id === playerId) {
+        if (player.id === 1) {
           player.wins++;
+          player.status = "win";
+          player.action = result.player1Action;
+        } else {
+          player.losses++;
+          player.status = "loss";
+          player.action = result.player2Action;
         }
       });
+      State.result?.push({ playerId, status: "win" });
+
       await writeToFile("state", State);
       return "You Win";
     case -1:
       State.players.forEach((player) => {
-        if (player.id === playerId) {
+        if (player.id === 1) {
           player.losses++;
+          player.status = "loss";
+          player.action = result.player1Action;
+        } else {
+          console.log("elsing");
+          player.wins++;
+          player.status = "win";
+          player.action = result.player2Action;
         }
       });
+      State.result?.push({ playerId, status: "loss" });
+
       await writeToFile("state", State);
 
       return `${
         gameChoiceEmojiMap[result.player2Choice as GameChoiceEmojiKey]
       } ${result.player2Action} ${
         gameChoiceEmojiMap[player1Choice as GameChoiceEmojiKey]
-      }\nYou Lose`;
+      }`;
     default:
       State.players.forEach((player) => {
-        if (player.id === playerId) {
+        if (player.id) {
           player.draws++;
+          player.status = "draw";
         }
+        State.result?.push({ playerId, status: "draw" });
       });
       await writeToFile("state", State);
 
