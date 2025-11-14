@@ -1,0 +1,1 @@
+{"players":[{"id":1,"choice":"r","turn":false,"socketId":"lTjLvKI1wCJ-2c_1AAAB","name":"Player1","wins":1,"losses":0,"draws":0,"status":"win","action":"crushes"},{"id":2,"choice":"s","turn":false,"socketId":"pd4SLEBhTk-vRZ2gAAAD","name":"Player2","wins":0,"losses":1,"draws":0,"status":"loss","action":""}],"allPlayed":2,"result":[{"playerId":1,"status":"win"}]}

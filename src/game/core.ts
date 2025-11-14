@@ -27,8 +27,6 @@ export async function render(playerId: number) {
     return;
   }
 
-  // console.log(JSON.stringify(State.players, null, 2));
-
   const stat = `You ${you?.status} \nOpponent ${opponent.status}`;
 
   print(stat + "\n");
@@ -53,6 +51,8 @@ export async function update(config: { input: string; playerId: number }) {
   let isPlayerTurn = State.players[playerId - 1].turn;
 
   if (played && !isPlayerTurn) {
+    console.log(JSON.stringify(State.players, null, 2));
+
     console.log("Wait for opponent to play next.");
     // io.emit("playing:next", State);
     return;
@@ -60,18 +60,23 @@ export async function update(config: { input: string; playerId: number }) {
 
   State.players[playerId - 1].choice = input;
 
-  State.players.map((player) => {
-    if (player.id !== playerId) {
-      player.turn = true;
-    } else {
-      player.turn = false;
-    }
-  });
-
   if (State.allPlayed === 2) {
     State.allPlayed = 0;
   }
   State.allPlayed++;
+  console.log("all played ", State.allPlayed);
+
+  State.players.map((player) => {
+    if (State.allPlayed === 2) {
+      player.turn = false;
+    } else {
+      if (player.id !== playerId) {
+        player.turn = true;
+      } else {
+        player.turn = false;
+      }
+    }
+  });
 
   await writeToFile("state", State);
 
