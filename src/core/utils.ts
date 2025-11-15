@@ -5,11 +5,16 @@ const __dirname = import.meta.dirname;
 
 const fileBasePath = "../../storage";
 
-export async function writeToFile(filename: string, data: Record<string, any>) {
+export async function writeToFile(
+  filename: string,
+  data: Record<string, any>,
+  allPlayed?: number
+) {
   try {
     const fp = path.join(__dirname, `${fileBasePath}/${filename}.json`);
     const dataStr = JSON.stringify(data);
     await fs.writeFile(fp, dataStr);
+    // console.log({ allPlayed });
   } catch (error) {
     console.error(error);
   }

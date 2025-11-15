@@ -135,7 +135,6 @@ export async function updateGameResult(
           player.status = "loss";
           player.action = result.player1Action;
         } else {
-          console.log("elsing");
           player.wins++;
           player.status = "win";
           player.action = result.player2Action;

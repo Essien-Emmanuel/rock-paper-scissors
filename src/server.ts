@@ -1,14 +1,16 @@
 import { createServer } from "node:http";
-import { Server } from "socket.io";
 import { readTheFile, writeToFile } from "./core/utils";
 import { GameState, State as initGameState } from "./game/state";
+import socket from "./socket";
 
 const httpServer = createServer();
-export const io = new Server(httpServer);
 
-io.on("connection", async (socket) => {
-  console.log(socket.id + " connected");
+const { getIO, initSocket } = socket;
+initSocket(httpServer);
 
+const socketIO = getIO();
+
+socketIO.on("connection", async (socket) => {
   let State: GameState = await readTheFile("state");
   if (!State) {
     await writeToFile("state", initGameState);
@@ -40,12 +42,9 @@ io.on("connection", async (socket) => {
     return;
   }
 
-  io.emit("playing:first", State);
+  socketIO.emit("playing:first", State);
 
-  // disconnect
-  socket.on("disconnect", () => {
-    console.log(socket.id, " disconnected");
-  });
+  // io.emit("render:result", State);
 });
 
 httpServer.listen(8080, () => {

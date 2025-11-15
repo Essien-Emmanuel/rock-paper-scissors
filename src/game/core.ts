@@ -1,6 +1,6 @@
 import { exitProgram, print } from "../core/io";
 import { readTheFile, writeToFile } from "../core/utils";
-import { io } from "../server";
+import socket from "../socket";
 import {
   gameObjectsKeyMap,
   gamePlayResult,
@@ -29,10 +29,12 @@ export async function render(playerId: number) {
 
   const stat = `You ${you?.status} \nOpponent ${opponent.status}`;
 
-  print(stat + "\n");
+  print(stat + "\n\n");
 }
 
 export async function update(config: { input: string; playerId: number }) {
+  const socketIO = socket.getIO();
+
   const { input, playerId } = config;
   if (input === "\u0003") {
     exitProgram();
@@ -46,15 +48,14 @@ export async function update(config: { input: string; playerId: number }) {
   const State: GameState = await readTheFile("state");
 
   // run game
+  let justPlayed = false;
+
   const played = State.players.find((player) => player.choice);
 
   let isPlayerTurn = State.players[playerId - 1].turn;
 
-  if (played && !isPlayerTurn) {
-    console.log(JSON.stringify(State.players, null, 2));
-
+  if (played && !isPlayerTurn && State.allPlayed < 2) {
     console.log("Wait for opponent to play next.");
-    // io.emit("playing:next", State);
     return;
   }
 
@@ -64,7 +65,6 @@ export async function update(config: { input: string; playerId: number }) {
     State.allPlayed = 0;
   }
   State.allPlayed++;
-  console.log("all played ", State.allPlayed);
 
   State.players.map((player) => {
     if (State.allPlayed === 2) {
@@ -78,9 +78,9 @@ export async function update(config: { input: string; playerId: number }) {
     }
   });
 
-  await writeToFile("state", State);
+  justPlayed = true;
 
-  // console.log(JSON.stringify(State, null, 2));
+  await writeToFile("state", State, State.allPlayed);
 
   // show input
   const choice = gameObjectsKeyMap[input as keyof typeof gameObjectsKeyMap];
@@ -90,7 +90,7 @@ export async function update(config: { input: string; playerId: number }) {
   isPlayerTurn = State.players[playerId - 1].turn;
 
   if (State.allPlayed < 2) {
-    if (!isPlayerTurn) {
+    if (!justPlayed) {
       console.log("Wait for opponent to play");
     }
     // io.emit("playing:next", State);
@@ -108,6 +108,8 @@ export async function update(config: { input: string; playerId: number }) {
 
   await updateGameResult(playerId, player1Choice, result);
 
-  render(playerId);
+  // render(playerId);
+  console.log("before emit");
+  socketIO.emit("render:result", State);
   return;
 }
