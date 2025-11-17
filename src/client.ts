@@ -3,7 +3,7 @@ import { GameState } from "./game/state";
 import { render, update } from "./game/core";
 import { handleInput } from "./core/io";
 
-const clientSocket = io("ws://localhost:8080");
+const clientSocket = io("http://localhost:8080");
 // const clientSocket = io();
 
 clientSocket.on("playing:first", async (state: GameState) => {

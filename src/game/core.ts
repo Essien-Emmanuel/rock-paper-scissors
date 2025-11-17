@@ -1,6 +1,6 @@
 import { exitProgram, print } from "../core/io";
 import { readTheFile, writeToFile } from "../core/utils";
-import socket from "../socket";
+import { Socket } from "../socket";
 import {
   gameObjectsKeyMap,
   gamePlayResult,
@@ -33,7 +33,7 @@ export async function render(playerId: number) {
 }
 
 export async function update(config: { input: string; playerId: number }) {
-  const socketIO = socket.getIO();
+  // const socketIO = Socket.getInstance();
 
   const { input, playerId } = config;
   if (input === "\u0003") {
@@ -110,6 +110,6 @@ export async function update(config: { input: string; playerId: number }) {
 
   // render(playerId);
   console.log("before emit");
-  socketIO.emit("render:result", State);
+  // socketIO.getIO().emit("render:result", State);
   return;
 }
