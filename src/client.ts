@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
-import { GameState } from "./game/state";
 import { exitProgram, handleInput } from "./core/io";
+import { GameState } from "./types";
 
 const clientSocket = io("http://localhost:8080");
 

@@ -5,10 +5,9 @@ import {
   gameChoiceEmojiMap,
   gameObjectsKeyMap,
   gamePlayResult,
-  PlayerChoice,
   updateGameResult,
 } from "./logic";
-import { GameState, PlayerConfig } from "./state";
+import { PlayerChoice, PlayerConfig, GameState } from "../types";
 
 type Player = PlayerConfig | { [key: string]: any };
 type GameChoice = keyof typeof gameChoiceEmojiMap;

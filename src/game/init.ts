@@ -1,7 +1,8 @@
 import { readTheFile, writeToFile } from "../core/utils";
-import { GameState, State as initGameState } from "./state";
+import { State as initGameState } from "./state";
 import { Socket } from "../socket";
 import { update } from "./core";
+import { GameState } from "../types";
 
 export function initGame(socketIO: Socket) {
   socketIO.getIO().on("connection", async (socket) => {

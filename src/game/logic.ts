@@ -1,5 +1,6 @@
 import { readTheFile, writeToFile } from "../core/utils";
-import { GameState } from "./state";
+import { GameChoiceEmojiKey, GamePlayResult, PlayerChoice } from "../types";
+import { GameState } from "../types";
 
 export const gameObjects = ["rock", "paper", "scissors"] as const;
 
@@ -14,19 +15,6 @@ export const gameObjectsKeyMap = {
   p: "paper",
   s: "scissors",
 };
-
-export type PlayerChoice = (typeof gameObjects)[number] | (string & {});
-
-export type GameChoiceAction = "crushes" | "cuts" | "covers" | (string & {});
-
-export type GamePlayResult = {
-  result: number;
-  player1Action: GameChoiceAction;
-  player2Choice: PlayerChoice;
-  player2Action: GameChoiceAction;
-};
-
-export type GameChoiceEmojiKey = keyof typeof gameChoiceEmojiMap;
 
 function getNpcChoice(gameObjects: any) {
   const randInd = Math.floor(Math.random() * gameObjects.length);
