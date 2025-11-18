@@ -13,7 +13,6 @@ export class Socket {
 
   static getInstance() {
     if (!Socket.instance) {
-      console.log("new socket");
       this.instance = new Socket();
     }
     return this.instance;
