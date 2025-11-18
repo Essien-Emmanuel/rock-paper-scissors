@@ -1,6 +1,7 @@
 import { readTheFile, writeToFile } from "../core/utils";
 import { GameState, State as initGameState } from "./state";
 import { Socket } from "../socket";
+import { update } from "./core";
 
 export function initGame(socketIO: Socket) {
   socketIO.getIO().on("connection", async (socket) => {
@@ -31,14 +32,18 @@ export function initGame(socketIO: Socket) {
       await writeToFile("state", State);
     }
 
+    socket.on("exec:update", (arg: { input: string; playerId: number }) => {
+      const { input, playerId } = arg;
+
+      update({ input, playerId });
+    });
+
     const playersCount = State.players.length;
     if (playersCount < 2) {
-      console.log("Waiting for the second player.");
+      socketIO.getIO().emit("render:log", "Wait for the second player...");
       return;
     }
 
-    socketIO.getIO().emit("playing:first", State);
-
-    // io.emit("render:result", State);
+    socketIO.getIO().emit("exec:game", State);
   });
 }

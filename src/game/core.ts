@@ -1,7 +1,8 @@
-import { exitProgram, print } from "../core/io";
 import { readTheFile, writeToFile } from "../core/utils";
 import { Socket } from "../socket";
+import { GameObjectsKey } from "../types";
 import {
+  gameChoiceEmojiMap,
   gameObjectsKeyMap,
   gamePlayResult,
   PlayerChoice,
@@ -9,11 +10,17 @@ import {
 } from "./logic";
 import { GameState, PlayerConfig } from "./state";
 
+type Player = PlayerConfig | { [key: string]: any };
+type GameChoice = keyof typeof gameChoiceEmojiMap;
+
 export async function render(playerId: number) {
+  const socketIO = Socket.getInstance();
+  const io = socketIO.getIO();
+
   const State: GameState = await readTheFile("state");
 
-  let you: PlayerConfig | { [key: string]: any } = {};
-  let opponent: PlayerConfig | { [key: string]: any } = {};
+  let you: Player = {};
+  let opponent: Player = {};
 
   for (let player of State.players) {
     if (player.id === playerId) {
@@ -23,39 +30,59 @@ export async function render(playerId: number) {
     }
   }
   if (!you) {
+    io.emit("render:log", "No players connected.");
     console.log("No players connected.");
     return;
   }
 
-  const stat = `You ${you?.status} \nOpponent ${opponent.status}`;
+  const stat = you.status !== "draw" ? `You ${you?.status}` : you.status;
 
-  print(stat + "\n\n");
+  let gameDetail: string = "";
+
+  const yourChoice = gameObjectsKeyMap[you.choice as GameObjectsKey];
+
+  const opponentChoice = gameObjectsKeyMap[opponent.choice as GameObjectsKey];
+
+  if (you.status === "win") {
+    gameDetail = `${yourChoice} ${you.action} ${opponentChoice}`;
+  } else if (you.status === "loss") {
+    gameDetail = `${opponentChoice} ${opponent.action} ${yourChoice}`;
+  }
+
+  io.emit("render:log", gameDetail);
+  io.to(you.socketId).emit("render:log", stat);
+  io.to(opponent.socketId).emit("render:log", `You ${opponent.status}`);
+  io.emit("render:log", "\nRock Paper Scissors!!!");
 }
 
 export async function update(config: { input: string; playerId: number }) {
-  // const socketIO = Socket.getInstance();
+  const socketIO = Socket.getInstance();
+  const io = socketIO.getIO();
 
   const { input, playerId } = config;
-  if (input === "\u0003") {
-    exitProgram();
-  }
-
-  if (!Object.keys(gameObjectsKeyMap).includes(input.toLowerCase())) {
-    console.log("Invalid Choices \nChoose 'r', 'p' or 's'");
-    return;
-  }
 
   const State: GameState = await readTheFile("state");
+  const player = State.players[playerId - 1];
+
+  if (!Object.keys(gameObjectsKeyMap).includes(input.toLowerCase())) {
+    io.to(player.socketId).emit(
+      "render:log",
+      `Invalid Choices \nChoose 'r', 'p' or 's'`
+    );
+
+    return;
+  }
 
   // run game
   let justPlayed = false;
 
   const played = State.players.find((player) => player.choice);
 
-  let isPlayerTurn = State.players[playerId - 1].turn;
+  let isPlayerTurn = player.turn;
 
   if (played && !isPlayerTurn && State.allPlayed < 2) {
-    console.log("Wait for opponent to play next.");
+    io.to(player.socketId).emit("render:log", `Wait for opponent to play next`);
+
     return;
   }
 
@@ -85,21 +112,23 @@ export async function update(config: { input: string; playerId: number }) {
   // show input
   const choice = gameObjectsKeyMap[input as keyof typeof gameObjectsKeyMap];
 
-  console.log("YOU: ", choice);
+  io.to(player.socketId).emit(
+    "render:log",
+    `You: ${choice + gameChoiceEmojiMap[choice as GameChoice]}`
+  );
 
   isPlayerTurn = State.players[playerId - 1].turn;
 
   if (State.allPlayed < 2) {
     if (!justPlayed) {
-      console.log("Wait for opponent to play");
+      io.to(player.socketId).emit("render:log", `Wait for opponent to play`);
     }
-    // io.emit("playing:next", State);
     return;
   }
 
   const [player1Choice, player2Choice] = State.players.map((player) => {
     const playerChoice = gameObjectsKeyMap[
-      player.choice as keyof typeof gameObjectsKeyMap
+      player.choice as GameObjectsKey
     ] as PlayerChoice;
     return playerChoice;
   });
@@ -108,8 +137,6 @@ export async function update(config: { input: string; playerId: number }) {
 
   await updateGameResult(playerId, player1Choice, result);
 
-  // render(playerId);
-  console.log("before emit");
-  // socketIO.getIO().emit("render:result", State);
+  render(playerId);
   return;
 }
