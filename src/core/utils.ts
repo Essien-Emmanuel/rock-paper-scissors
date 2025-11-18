@@ -14,7 +14,6 @@ export async function writeToFile(
     const fp = path.join(__dirname, `${fileBasePath}/${filename}.json`);
     const dataStr = JSON.stringify(data);
     await fs.writeFile(fp, dataStr);
-    // console.log({ allPlayed });
   } catch (error) {
     console.error(error);
   }

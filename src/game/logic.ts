@@ -150,7 +150,3 @@ export async function updateGameResult(
       return "Draw";
   }
 }
-
-export function rockPaperScissors(playerId: number) {
-  console.log("Rock, paper, scissors");
-}
